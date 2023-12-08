@@ -21,12 +21,11 @@ mongoose.connect(
 );
 
 const userSchema = new mongoose.Schema({
-  username: String,
+  username: { type: String, unique: true },
   password: String,
   token: String,
-  formId: String,
-  responses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Response" }],
-});
+  formId: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Form' }],
+ });
 
 const User = mongoose.model("User", userSchema);
 
@@ -105,19 +104,21 @@ const authenticateUser = async (req, res, next) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 const formSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Reference to 'users' collection
   formData: [{ type: mongoose.Schema.Types.Mixed }],
   title: String,
-  responses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Response" }],
+  responses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Response' }]
 });
+
 
 const Form = mongoose.model("Form", formSchema);
 app.get("/getForms", authenticateUser, async (req, res) => {
   try {
     const forms = await Form.find({ userId: req.user._id });
 
-    res.json({ forms });
+    res.json({ forms,name:req.user.username });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -217,7 +218,7 @@ app.get("/response/getForms/:id", async (req, res) => {
 });
 
 const responseSchema = new mongoose.Schema({
-  formId: { type: mongoose.Schema.Types.ObjectId, ref: "Form" },
+  formId: { type: mongoose.Schema.Types.ObjectId, ref: "forms" },
   responseData: { type: mongoose.Schema.Types.Mixed },
   name: String,
 });
